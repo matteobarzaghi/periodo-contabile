@@ -33,14 +33,16 @@ def get_accounting_dates(today=None):
     return apertura, chiusura, prossima_apertura, prossima_chiusura
 
 # === INPUT MANUALE ===
-input_str = input("Inserisci una data (YYYY-MM-DD): ").strip()
-try:
-    test_date = datetime.strptime(input_str, "%Y-%m-%d").date()
-except ValueError:
-    print("Formato non valido. Uso la data di oggi.")
-    test_date = None
+#input_str = input("Inserisci una data (YYYY-MM-DD): ").strip()
+#try:
+ #   test_date = datetime.strptime(input_str, "%Y-%m-%d").date()
+#except ValueError:
+#    print("Formato non valido. Uso la data di oggi.")
+#    test_date = None
 
-apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates(test_date)
+#apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates(test_date)
+
+apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates()
 
 print("📅 Apertura periodo attuale:", apertura)
 print("📅 Chiusura periodo attuale:", chiusura)

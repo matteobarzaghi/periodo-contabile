@@ -1,31 +1,38 @@
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 import calendar
 
-def calcola_prossimo_periodo_contabile(data_rif=None):
-    print("== Calcolo periodo contabile della settimana prossima ==")
+def get_accounting_dates(today=None):
+    today = today or date.today()
     
-    oggi = data_rif or datetime.today()
-    print(f"Giorno di esecuzione: {oggi.strftime('%Y-%m-%d')} ({oggi.strftime('%A')})")
+    # Calcola in quanti giorni finisce il mese
+    last_day_of_month = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
+    days_to_month_end = (last_day_of_month - today).days
 
-    # Calcola il prossimo lunedì
-    giorni_alla_prossima_settimana = 7 - oggi.weekday()
-    lunedi = oggi + timedelta(days=giorni_alla_prossima_settimana)
-    print(f"Prossimo lunedì: {lunedi.strftime('%Y-%m-%d')}")
+    # Calcolo periodo attuale
+    if days_to_month_end < 7:
+        # Se siamo negli ultimi 6 giorni del mese
+        apertura = today - timedelta(days=today.weekday())  # Lunedì della settimana attuale
+        chiusura = last_day_of_month
+    else:
+        apertura = today - timedelta(days=today.weekday())  # Lunedì della settimana attuale
+        chiusura = apertura + timedelta(days=6)  # Domenica della stessa settimana
+        # Se la domenica è di un altro mese, accorcia il periodo a fine mese
+        if chiusura.month != apertura.month:
+            chiusura = last_day_of_month
 
-    # Calcola la domenica successiva
-    domenica = lunedi + timedelta(days=6)
-    print(f"Domenica successiva: {domenica.strftime('%Y-%m-%d')}")
+    # Prossimo periodo contabile
+    next_month = today.replace(day=28) + timedelta(days=4)  # Vai al prossimo mese in modo robusto
+    first_day_next_month = next_month.replace(day=1)
+    # Calcola la prima domenica del mese successivo
+    days_to_sunday = (6 - first_day_next_month.weekday()) % 7
+    prossima_chiusura = first_day_next_month + timedelta(days=days_to_sunday)
+    prossima_apertura = first_day_next_month
 
-    # Ultimo giorno del mese
-    fine_mese = datetime(lunedi.year, lunedi.month, calendar.monthrange(lunedi.year, lunedi.month)[1])
-    print(f"Ultimo giorno del mese: {fine_mese.strftime('%Y-%m-%d')}")
+    return apertura, chiusura, prossima_apertura, prossima_chiusura
 
-    # Fine periodo contabile
-    fine_periodo = min(domenica, fine_mese)
-    print(f"Fine periodo contabile: {fine_periodo.strftime('%Y-%m-%d')}")
-
-    return lunedi.strftime('%Y-%m-%d'), fine_periodo.strftime('%Y-%m-%d')
-
-
-inizio, fine = calcola_prossimo_periodo_contabile()
-print(f"Periodo contabile da {inizio} a {fine}")
+# Esempio di utilizzo
+apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates()
+print("📅 Apertura periodo attuale:", apertura)
+print("📅 Chiusura periodo attuale:", chiusura)
+print("📅 Prossima apertura:", prossima_apertura)
+print("📅 Prossima chiusura:", prossima_chiusura)

@@ -1,37 +1,47 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import calendar
 
 def get_accounting_dates(today=None):
     today = today or date.today()
-    
-    # Calcola in quanti giorni finisce il mese
-    last_day_of_month = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
-    days_to_month_end = (last_day_of_month - today).days
 
-    # Calcolo periodo attuale
-    if days_to_month_end < 7:
-        # Se siamo negli ultimi 6 giorni del mese
-        apertura = today - timedelta(days=today.weekday())  # Lunedì della settimana attuale
+    # Calcola apertura e chiusura candidati (settimana contabile corrente)
+    apertura = today - timedelta(days=today.weekday())  # lunedì corrente
+    chiusura_candidata = apertura + timedelta(days=6)   # domenica
+
+    # Fine mese del mese di apertura
+    last_day_of_month = date(apertura.year, apertura.month, calendar.monthrange(apertura.year, apertura.month)[1])
+    days_from_apertura_to_month_end = (last_day_of_month - apertura).days
+
+    # === PERIODO ATTUALE ===
+    if days_from_apertura_to_month_end < 7 or chiusura_candidata.month != apertura.month:
         chiusura = last_day_of_month
     else:
-        apertura = today - timedelta(days=today.weekday())  # Lunedì della settimana attuale
-        chiusura = apertura + timedelta(days=6)  # Domenica della stessa settimana
-        # Se la domenica è di un altro mese, accorcia il periodo a fine mese
-        if chiusura.month != apertura.month:
-            chiusura = last_day_of_month
+        chiusura = chiusura_candidata
 
-    # Prossimo periodo contabile
-    next_month = today.replace(day=28) + timedelta(days=4)  # Vai al prossimo mese in modo robusto
-    first_day_next_month = next_month.replace(day=1)
-    # Calcola la prima domenica del mese successivo
-    days_to_sunday = (6 - first_day_next_month.weekday()) % 7
-    prossima_chiusura = first_day_next_month + timedelta(days=days_to_sunday)
-    prossima_apertura = first_day_next_month
+    # === PROSSIMO PERIODO ===
+    giorno_successivo = chiusura + timedelta(days=1)
+
+    if giorno_successivo.weekday() == 6:
+        # Se il giorno dopo è domenica, periodo = 1 solo giorno
+        prossima_apertura = giorno_successivo
+        prossima_chiusura = giorno_successivo
+    else:
+        days_to_sunday = (6 - giorno_successivo.weekday()) % 7
+        prossima_apertura = giorno_successivo
+        prossima_chiusura = giorno_successivo + timedelta(days=days_to_sunday)
 
     return apertura, chiusura, prossima_apertura, prossima_chiusura
 
-# Esempio di utilizzo
-apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates()
+# === INPUT MANUALE ===
+input_str = input("Inserisci una data (YYYY-MM-DD): ").strip()
+try:
+    test_date = datetime.strptime(input_str, "%Y-%m-%d").date()
+except ValueError:
+    print("Formato non valido. Uso la data di oggi.")
+    test_date = None
+
+apertura, chiusura, prossima_apertura, prossima_chiusura = get_accounting_dates(test_date)
+
 print("📅 Apertura periodo attuale:", apertura)
 print("📅 Chiusura periodo attuale:", chiusura)
 print("📅 Prossima apertura:", prossima_apertura)
